@@ -1,1 +1,89 @@
 
+{% assign chart_id = "chart-" | append_random %}
+{% assign feed_info = IDX_0 %}
+{% assign feed_data = IDX_1.data %}
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://usetrmnl.com/js/chartkick/5.0.1/chartkick.min.js"></script>
+
+<script>
+  const feedData = {{ feed_data | json }};
+  const chartId = {{ chart_id | json }}
+</script>
+
+<script type="text/javascript">  // Process feedData to create chart data
+  var data = [];
+  if (feedData && Array.isArray(feedData)) {
+    data = feedData
+      .map(function(item) {
+        // Use full timestamp from created_at (format: "2025-07-05T21:45:01Z")
+        var timestamp = item[0];
+
+        // Convert value to number, skip if invalid
+        var numValue = parseFloat(item[1]);
+
+        if (timestamp && !isNaN(numValue)) {
+          return [timestamp, numValue];
+        }
+        return null;
+      })
+      .filter(function(item) {
+        return item !== null;
+      })
+      .reverse(); // Reverse to show chronological order (oldest first)
+  }
+
+  // recommended configs to achieve the TRMNL Framework aesthetic
+  var createChart = function(chartHeight) {
+    new Chartkick["LineChart"](
+    chartId,
+    data,
+    {
+      adapter: "highcharts", // chartjs, google, etc available
+      prefix: "",
+      thousands: ",",
+      points: false,
+      colors: ["black"],
+      curve: true,
+      library: {
+        chart: {
+          height: chartHeight || 260
+        },
+        plotOptions: {
+          series: {
+            animation: false,
+            lineWidth: 4
+          }
+        },
+        yAxis: {
+          labels: {
+            style: {
+              fontSize: "16px",
+              color:"#000000"
+            }
+          },
+          gridLineDashStyle: "shortdot",
+          gridLineWidth: 1,
+          gridLineColor: "#000000",
+          tickAmount: 5
+        },
+        xAxis: {
+          type: "daytime",
+          labels: {
+            style: {
+              fontSize: "16px",
+              color: "#000000"
+            }
+          },
+          lineWidth: 0,
+          gridLineDashStyle: "dot",
+          tickWidth: 1,
+          tickLength: 0,
+          gridLineWidth: 1,
+          gridLineColor: "#000000",
+          tickPixelInterval: 120
+        }
+      }
+    });
+  };
+</script>

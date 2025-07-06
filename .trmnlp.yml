@@ -7,12 +7,19 @@ watch:
   - src
 
 # values of custom fields (defined in src/settings.yml)
-custom_fields: {}
+custom_fields: {
+  adafruit_username: '{{ env.IO_USERNAME }}',
+  adafruit_api_key: '{{ env.IO_KEY }}',
+  adafruit_feed_id: 'demo-iot-data',
+  adafruit_lookback: 24,
+  # adafruit_resolution: 1,
+  # adafruit_aggregate: val
+}
 
 # override variables
 variables:
   trmnl: {
     plugin_settings: {
-      instance_name: 'My Instance'
+      instance_name: 'Adafruit IO'
     }
   }
