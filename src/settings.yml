@@ -31,11 +31,12 @@ custom_fields:
 - keyname: adafruit_feed_id
   field_type: string
   name: Feed ID
-  description: The ID (not the name) of the feed receiving data.
+  description: The ID (not the name) of the feed receiving data
   placeholder: my-device-feed
 - keyname: adafruit_aggregate
   field_type: select
   name: Data Aggregation
+  description: Aggregate field to return
   default: val
   options:
   - Value (default): val
@@ -47,6 +48,7 @@ custom_fields:
 - keyname: adafruit_resolution
   field_type: select
   name: Data Resolution (Minutes)
+  description: Size of aggregation slice in minutes
   default: 1
   options:
   - 1
@@ -61,7 +63,7 @@ custom_fields:
 - keyname: adafruit_lookback
   field_type: number
   name: Hours of Data
-  description: The number of hours to return
+  description: Number of hours to include in the chart
   default: 24
   placeholder: 1
 name: Adafruit IO
