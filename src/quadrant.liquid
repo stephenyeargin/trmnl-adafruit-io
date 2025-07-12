@@ -1,17 +1,15 @@
-<div class="view">
-  <div class="layout layout--col gap--space-between">
-    <div id="{{ chart_id }}" style="width: 100%"></div>
-  </div>
+<div class="layout layout--col gap--space-between">
+  <div id="{{ chart_id }}" style="width: 100%"></div>
+</div>
 
-  <div class="title_bar">
-    <img class="image image-stroke image-stroke--medium" src="https://raw.githubusercontent.com/stephenyeargin/trmnl-adafruit-io/refs/heads/main/assets/adafruit.svg" />
-    <span class="title">{{ feed_info.name }}</span>
-    <span class="instance">{{ trmnl.plugin_settings.instance_name }}</span>
-  </div>
+<div class="title_bar">
+  <img class="image image-stroke image-stroke--medium" src="https://raw.githubusercontent.com/stephenyeargin/trmnl-adafruit-io/refs/heads/main/assets/adafruit.svg" />
+  <span class="title">{{ feed_info.name }}</span>
+  <span class="instance">{{ trmnl.plugin_settings.instance_name }}</span>
 </div>
 
 <script>
-    // ensure your chart loads before plugin render is generated
+  // ensure your chart loads before plugin render is generated
   if ("Chartkick" in window) {
     createChart(205);
   } else {
