@@ -15,38 +15,52 @@
 <script src="https://usetrmnl.com/js/chartkick/5.0.1/chartkick.min.js"></script>
 
 <script>
-  const feedData = {{ feed_data | json }};
-  const chartId = {{ chart_id | json }}
+  const feedData = {{ feed_data | json }};;
+  const chartId = {{ chart_id | json }};
+  const timeZone = {{ trmnl.user.time_zone_iana | json }};
+  const locale = {{ trmnl.user.locale | json }};
 </script>
 
-<script type="text/javascript">  // Process feedData to create chart data
-  var data = [];
-  if (feedData && Array.isArray(feedData)) {
-    data = feedData
-      .map(function(item) {
-        // Use full timestamp from created_at (format: "2025-07-05T21:45:01Z")
-        var timestamp = item[0];
+<script>
+  // Process feedData to create chart data
+  const data = feedData && Array.isArray(feedData)
+    ? feedData
+        .map(item => {
+          // Use full timestamp from created_at (format: "2025-07-05T21:45:01Z")
+          const timestamp = item[0];
 
-        // Convert value to number, skip if invalid
-        var numValue = parseFloat(item[1]);
+          // Convert value to number, skip if invalid
+          const numValue = parseFloat(item[1]);          if (timestamp && !isNaN(numValue)) {
+            // Parse the UTC timestamp and convert to local timezone using IANA timezone
+            // This is more reliable than using UTC offset alone
+            const utcTime = new Date(timestamp);
 
-        if (timestamp && !isNaN(numValue)) {
-          return [timestamp, numValue];
-        }
-        return null;
-      })
-      .filter(function(item) {
-        return item !== null;
-      })
-      .reverse(); // Reverse to show chronological order (oldest first)
-  }
+            // Create a date string in the user's timezone
+            const localDateString = utcTime.toLocaleString('en-CA', {
+              timeZone: timeZone,
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: false
+            });
+
+            // Parse the local date string back to a timestamp
+            const localTime = new Date(localDateString);
+
+            return [localTime.getTime(), numValue];
+          }
+          return null;
+        })
+        .filter(item => item !== null)
+        .reverse() // Reverse to show chronological order (oldest first)
+    : [];
 
   // recommended configs to achieve the TRMNL Framework aesthetic
-  var createChart = function(chartHeight) {
-    new Chartkick["LineChart"](
-    chartId,
-    data,
-    {
+  const createChart = (chartHeight = 260) => {
+    new Chartkick.LineChart(chartId, data, {
       adapter: "highcharts", // chartjs, google, etc available
       prefix: "",
       thousands: ",",
@@ -55,7 +69,7 @@
       curve: true,
       library: {
         chart: {
-          height: chartHeight || 260
+          height: chartHeight
         },
         plotOptions: {
           series: {
@@ -67,7 +81,7 @@
           labels: {
             style: {
               fontSize: "16px",
-              color:"#000000"
+              color: "#000000"
             }
           },
           gridLineDashStyle: "shortdot",
@@ -76,11 +90,21 @@
           tickAmount: 5
         },
         xAxis: {
-          type: "daytime",
+          type: "datetime",
           labels: {
             style: {
               fontSize: "16px",
               color: "#000000"
+            },
+            formatter() {
+              // Format the timestamp using the user's locale and timezone
+              const date = new Date(this.value);
+              return date.toLocaleString(locale, {
+                timeZone: timeZone,
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              });
             }
           },
           lineWidth: 0,

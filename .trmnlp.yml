@@ -21,5 +21,11 @@ variables:
   trmnl: {
     plugin_settings: {
       instance_name: 'Adafruit IO'
+    },
+    user: {
+      locale: "en",
+      time_zone: Central Time (US & Canada),
+      time_zone_iana: America/Chicago,
+      utc_offset: -18000
     }
   }
