@@ -30,27 +30,13 @@
           const timestamp = item[0];
 
           // Convert value to number, skip if invalid
-          const numValue = parseFloat(item[1]);          if (timestamp && !isNaN(numValue)) {
-            // Parse the UTC timestamp and convert to local timezone using IANA timezone
-            // This is more reliable than using UTC offset alone
+          const numValue = parseFloat(item[1]);
+          if (timestamp && !isNaN(numValue)) {
+            // Parse the UTC timestamp and use it directly for chart data
+            // Timezone conversion is only applied for display (axis labels, tooltips)
             const utcTime = new Date(timestamp);
 
-            // Create a date string in the user's timezone
-            const localDateString = utcTime.toLocaleString('en-CA', {
-              timeZone: timeZone,
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              hour12: false
-            });
-
-            // Parse the local date string back to a timestamp
-            const localTime = new Date(localDateString);
-
-            return [localTime.getTime(), numValue];
+            return [utcTime.getTime(), numValue];
           }
           return null;
         })
