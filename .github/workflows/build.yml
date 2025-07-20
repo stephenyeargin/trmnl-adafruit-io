@@ -120,7 +120,7 @@ jobs:
           else
             echo "## Initial Release" > release_notes.md
             echo "" >> release_notes.md
-            echo "- Initial release of trmnl-nyt-best-sellers plugin" >> release_notes.md
+            echo "- Initial release of plugin" >> release_notes.md
           fi
           
           echo "Release notes generated:"
