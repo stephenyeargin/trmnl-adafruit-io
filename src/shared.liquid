@@ -2,7 +2,6 @@
 {% assign chart_id = "chart-" | append_random %}
 {% assign feed_info = IDX_0 %}
 {% assign feed_data = IDX_1.data %}
-
 {%- capture adafruit_logo %}
 <svg width="100%" height="100%" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
     <g transform="matrix(1,0,0,1,-14,-12.81)">
@@ -15,15 +14,15 @@
 <script src="https://usetrmnl.com/js/chartkick/5.0.1/chartkick.min.js"></script>
 
 <script>
+  const deviceHeight = {{ trmnl.device.height | default: 480 | json }}
   const feedData = {{ feed_data | json }};;
   const chartId = {{ chart_id | json }};
   const timeZone = {{ trmnl.user.time_zone_iana | json }};
   const locale = {{ trmnl.user.locale | json }};
-</script>
 
-<script>
   // Process feedData to create chart data
-  const data = feedData && Array.isArray(feedData)
+  const hasValidData = feedData && Array.isArray(feedData);
+  const data = hasValidData
     ? feedData
         .map(item => {
           // Use full timestamp from created_at (format: "2025-07-05T21:45:01Z")
@@ -44,9 +43,14 @@
         .reverse() // Reverse to show chronological order (oldest first)
     : [];
 
+  const isDataMissing = !hasValidData;
+  const isDataEmpty = hasValidData && data.length === 0;
+
   // recommended configs to achieve the TRMNL Framework aesthetic
   const createChart = (chartHeight = 260) => {
-    new Chartkick.LineChart(chartId, data, {
+    const chartData = (isDataMissing || isDataEmpty) ? [[Date.now(), 50]] : data;
+
+    const chartInstance = new Chartkick.LineChart(chartId, chartData, {
       adapter: "highcharts", // chartjs, google, etc available
       prefix: "",
       thousands: ",",
@@ -55,15 +59,46 @@
       curve: true,
       library: {
         chart: {
-          height: chartHeight
+          height: chartHeight,
+          events: {
+            load() {
+              if (isDataMissing || isDataEmpty) {
+                // Add appropriate message overlay
+                const message = isDataMissing ? 'Data Unavailable' : 'No Data';
+                this.renderer.text(
+                  message,
+                  this.chartWidth / 2,
+                  this.chartHeight / 2
+                )
+                  .attr({
+                    align: 'center',
+                    'font-size': '24px',
+                    'font-weight': 'bold',
+                    fill: '#999999'
+                  })
+                  .css({
+                    textAlign: 'center'
+                  })
+                  .add();
+
+                // Hide the series
+                if (this.series.length > 0) {
+                  this.series[0].hide();
+                }
+              }
+            }
+          }
         },
         plotOptions: {
           series: {
             animation: false,
-            lineWidth: 4
+            lineWidth: 4,
+            enableMouseTracking: !(isDataMissing || isDataEmpty)
           }
         },
         yAxis: {
+          min: (isDataMissing || isDataEmpty) ? 0 : undefined,
+          max: (isDataMissing || isDataEmpty) ? 100 : undefined,
           labels: {
             style: {
               fontSize: "16px",
@@ -85,12 +120,29 @@
             formatter() {
               // Format the timestamp using the user's locale and timezone
               const date = new Date(this.value);
-              return date.toLocaleString(locale, {
-                timeZone: timeZone,
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-              });
+              try {
+                // Only apply timezone if both locale and timeZone are available
+                if (locale && timeZone) {
+                  return date.toLocaleString(locale, {
+                    timeZone: timeZone,
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                  });
+                }
+                // Fallback formatting
+                return date.toLocaleString('en-US', {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true
+                });
+              } catch (e) {
+                // Final fallback - basic formatting
+                return date.toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+              }
             }
           },
           lineWidth: 0,

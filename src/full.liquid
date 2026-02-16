@@ -11,7 +11,7 @@
 <script>
   // ensure your chart loads before plugin render is generated
   if ("Chartkick" in window) {
-    createChart(420);
+    createChart(deviceHeight - 70);
   } else {
     window.addEventListener("chartkick:load", createChart, true);
   }
