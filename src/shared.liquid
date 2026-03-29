@@ -10,11 +10,10 @@
 </svg>
 {%- endcapture %}
 
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://usetrmnl.com/js/chartkick/5.0.1/chartkick.min.js"></script>
+<script src="https://trmnl.com/js/highcharts/12.3.0/highcharts.js"></script>
+<script src="https://trmnl.com/js/chartkick/5.0.1/chartkick.min.js"></script>
 
 <script>
-  const deviceHeight = {{ trmnl.device.height | default: 480 | json }}
   const feedData = {{ feed_data | json }};;
   const chartId = {{ chart_id | json }};
   const timeZone = {{ trmnl.user.time_zone_iana | json }};
@@ -47,7 +46,7 @@
   const isDataEmpty = hasValidData && data.length === 0;
 
   // recommended configs to achieve the TRMNL Framework aesthetic
-  const createChart = (chartHeight = 260) => {
+  const createChart = () => {
     const chartData = (isDataMissing || isDataEmpty) ? [[Date.now(), 50]] : data;
 
     const chartInstance = new Chartkick.LineChart(chartId, chartData, {
@@ -59,7 +58,6 @@
       curve: true,
       library: {
         chart: {
-          height: chartHeight,
           events: {
             load() {
               if (isDataMissing || isDataEmpty) {

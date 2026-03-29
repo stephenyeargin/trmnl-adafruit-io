@@ -1,5 +1,5 @@
 <div class="layout layout--col gap--space-between">
-  <div id="{{ chart_id }}" style="width: 100%"></div>
+  <div id="{{ chart_id }}" class="w--full h--full p--1 lg:p--3"></div>
 </div>
 
 <div class="title_bar">
@@ -11,7 +11,7 @@
 <script>
   // ensure your chart loads before plugin render is generated
   if ("Chartkick" in window) {
-    createChart(deviceHeight - 70);
+    createChart();
   } else {
     window.addEventListener("chartkick:load", createChart, true);
   }
