@@ -4,6 +4,8 @@ no_screen_padding: 'no'
 dark_mode: 'no'
 static_data: ''
 polling_verb: get
+framework_version: 2.3.7
+serverless_language: 
 polling_url: |
   https://io.adafruit.com/api/v2/{{ adafruit_username }}/feeds/{{ adafruit_feed_id }}
   https://io.adafruit.com/api/v2/{{ adafruit_username }}/feeds/{{ adafruit_feed_id }}/data/chart?hours={{ adafruit_lookback | default: 1 }}&field={{ adafruit_aggregate }}&resolution={{ adafruit_resolution }}
