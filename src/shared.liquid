@@ -10,148 +10,205 @@
 </svg>
 {%- endcapture %}
 
-<script src="https://trmnl.com/js/highcharts/12.3.0/highcharts.js"></script>
-<script src="https://trmnl.com/js/chartkick/5.0.1/chartkick.min.js"></script>
-
 <script>
-  const feedData = {{ feed_data | json }};;
-  const chartId = {{ chart_id | json }};
-  const timeZone = {{ trmnl.user.time_zone_iana | json }};
-  const locale = {{ trmnl.user.locale | json }};
+  if (!window.TRMNL_ADAFRUIT_IO_READY_PROMISE) {
+    const ensureScriptReady = (src, checkLoaded) => {
+      if (checkLoaded()) {
+        return Promise.resolve();
+      }
 
-  // Process feedData to create chart data
-  const hasValidData = feedData && Array.isArray(feedData);
-  const data = hasValidData
-    ? feedData
-        .map(item => {
-          // Use full timestamp from created_at (format: "2025-07-05T21:45:01Z")
-          const timestamp = item[0];
+      return new Promise((resolve, reject) => {
+        const script = document.querySelector(`script[src="${src}"]`) || document.createElement("script");
 
-          // Convert value to number, skip if invalid
-          const numValue = parseFloat(item[1]);
-          if (timestamp && !isNaN(numValue)) {
-            // Parse the UTC timestamp and use it directly for chart data
-            // Timezone conversion is only applied for display (axis labels, tooltips)
-            const utcTime = new Date(timestamp);
-
-            return [utcTime.getTime(), numValue];
+        const onLoad = () => {
+          if (checkLoaded()) {
+            resolve();
+          } else {
+            reject(new Error(`Script loaded but dependency missing: ${src}`));
           }
-          return null;
-        })
-        .filter(item => item !== null)
-        .reverse() // Reverse to show chronological order (oldest first)
-    : [];
+        };
 
-  const isDataMissing = !hasValidData;
-  const isDataEmpty = hasValidData && data.length === 0;
+        const onError = () => reject(new Error(`Failed to load script: ${src}`));
 
-  // recommended configs to achieve the TRMNL Framework aesthetic
-  const createChart = () => {
-    const chartData = (isDataMissing || isDataEmpty) ? [[Date.now(), 50]] : data;
+        script.addEventListener("load", onLoad, { once: true });
+        script.addEventListener("error", onError, { once: true });
 
-    const chartInstance = new Chartkick.LineChart(chartId, chartData, {
-      adapter: "highcharts", // chartjs, google, etc available
-      prefix: "",
-      thousands: ",",
-      points: false,
-      colors: ["black"],
-      curve: true,
-      library: {
-        chart: {
-          events: {
-            load() {
-              if (isDataMissing || isDataEmpty) {
-                // Add appropriate message overlay
-                const message = isDataMissing ? 'Data Unavailable' : 'No Data';
-                this.renderer.text(
-                  message,
-                  this.chartWidth / 2,
-                  this.chartHeight / 2
-                )
-                  .attr({
-                    align: 'center',
-                    'font-size': '24px',
-                    'font-weight': 'bold',
-                    fill: '#999999'
-                  })
-                  .css({
-                    textAlign: 'center'
-                  })
-                  .add();
+        if (!script.src) {
+          script.src = src;
+          document.head.appendChild(script);
+        } else if (checkLoaded()) {
+          // Existing script may already be loaded before listeners were attached.
+          resolve();
+        }
+      });
+    };
 
-                // Hide the series
-                if (this.series.length > 0) {
-                  this.series[0].hide();
+    window.TRMNL_ADAFRUIT_IO_READY_PROMISE = ensureScriptReady(
+      "https://trmnl.com/js/highcharts/12.3.0/highcharts.js",
+      () => typeof window.Highcharts !== "undefined"
+    )
+      .then(() => ensureScriptReady(
+        "https://trmnl.com/js/chartkick/5.0.1/chartkick.min.js",
+        () => typeof window.Chartkick !== "undefined"
+      ))
+      .then(() => {
+        window.dispatchEvent(new Event("chartkick:load"));
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }
+
+  (() => {
+    const feedData = {{ feed_data | json }};
+    const chartId = {{ chart_id | json }};
+    const timeZone = {{ trmnl.user.time_zone_iana | json }};
+    const locale = {{ trmnl.user.locale | json }};
+    const chartCreatedKey = `TRMNL_ADAFRUIT_IO_CREATED_${chartId}`;
+
+    // Process feedData to create chart data
+    const hasValidData = feedData && Array.isArray(feedData);
+    const data = hasValidData
+      ? feedData
+          .map(item => {
+            // Use full timestamp from created_at (format: "2025-07-05T21:45:01Z")
+            const timestamp = item[0];
+
+            // Convert value to number, skip if invalid
+            const numValue = parseFloat(item[1]);
+            if (timestamp && !isNaN(numValue)) {
+              // Parse the UTC timestamp and use it directly for chart data
+              // Timezone conversion is only applied for display (axis labels, tooltips)
+              const utcTime = new Date(timestamp);
+
+              return [utcTime.getTime(), numValue];
+            }
+            return null;
+          })
+          .filter(item => item !== null)
+          .reverse() // Reverse to show chronological order (oldest first)
+      : [];
+
+    const isDataMissing = !hasValidData;
+    const isDataEmpty = hasValidData && data.length === 0;
+
+    // recommended configs to achieve the TRMNL Framework aesthetic
+    const createChart = () => {
+      if (window[chartCreatedKey]) return;
+      if (!("Chartkick" in window)) return;
+
+      window[chartCreatedKey] = true;
+      const chartData = (isDataMissing || isDataEmpty) ? [[Date.now(), 50]] : data;
+
+      new Chartkick.LineChart(chartId, chartData, {
+        adapter: "highcharts", // chartjs, google, etc available
+        prefix: "",
+        thousands: ",",
+        points: false,
+        colors: ["black"],
+        curve: true,
+        library: {
+          accessibility: {
+            enabled: false
+          },
+          chart: {
+            events: {
+              load() {
+                if (isDataMissing || isDataEmpty) {
+                  // Add appropriate message overlay
+                  const message = isDataMissing ? "Data Unavailable" : "No Data";
+                  this.renderer.text(
+                    message,
+                    this.chartWidth / 2,
+                    this.chartHeight / 2
+                  )
+                    .attr({
+                      align: "center",
+                      "font-size": "24px",
+                      "font-weight": "bold",
+                      fill: "#999999"
+                    })
+                    .css({
+                      textAlign: "center"
+                    })
+                    .add();
+
+                  // Hide the series
+                  if (this.series.length > 0) {
+                    this.series[0].hide();
+                  }
                 }
               }
             }
-          }
-        },
-        plotOptions: {
-          series: {
-            animation: false,
-            lineWidth: 4,
-            enableMouseTracking: !(isDataMissing || isDataEmpty)
-          }
-        },
-        yAxis: {
-          min: (isDataMissing || isDataEmpty) ? 0 : undefined,
-          max: (isDataMissing || isDataEmpty) ? 100 : undefined,
-          labels: {
-            style: {
-              fontSize: "16px",
-              color: "#000000"
+          },
+          plotOptions: {
+            series: {
+              animation: false,
+              lineWidth: 4,
+              enableMouseTracking: !(isDataMissing || isDataEmpty)
             }
           },
-          gridLineDashStyle: "shortdot",
-          gridLineWidth: 1,
-          gridLineColor: "#000000",
-          tickAmount: 5
-        },
-        xAxis: {
-          type: "datetime",
-          labels: {
-            style: {
-              fontSize: "16px",
-              color: "#000000"
+          yAxis: {
+            min: (isDataMissing || isDataEmpty) ? 0 : undefined,
+            max: (isDataMissing || isDataEmpty) ? 100 : undefined,
+            labels: {
+              style: {
+                fontSize: "16px",
+                color: "#000000"
+              }
             },
-            formatter() {
-              // Format the timestamp using the user's locale and timezone
-              const date = new Date(this.value);
-              try {
-                // Only apply timezone if both locale and timeZone are available
-                if (locale && timeZone) {
-                  return date.toLocaleString(locale, {
-                    timeZone: timeZone,
-                    hour: 'numeric',
-                    minute: '2-digit',
+            gridLineDashStyle: "shortdot",
+            gridLineWidth: 1,
+            gridLineColor: "#000000",
+            tickAmount: 5
+          },
+          xAxis: {
+            type: "datetime",
+            labels: {
+              style: {
+                fontSize: "16px",
+                color: "#000000"
+              },
+              formatter() {
+                // Format the timestamp using the user's locale and timezone
+                const date = new Date(this.value);
+                try {
+                  // Only apply timezone if both locale and timeZone are available
+                  if (locale && timeZone) {
+                    return date.toLocaleString(locale, {
+                      timeZone: timeZone,
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true
+                    });
+                  }
+                  // Fallback formatting
+                  return date.toLocaleString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
                     hour12: true
                   });
+                } catch (e) {
+                  // Final fallback - basic formatting
+                  return date.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  });
                 }
-                // Fallback formatting
-                return date.toLocaleString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  hour12: true
-                });
-              } catch (e) {
-                // Final fallback - basic formatting
-                return date.toLocaleTimeString('en-US', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                });
               }
-            }
-          },
-          lineWidth: 0,
-          gridLineDashStyle: "dot",
-          tickWidth: 1,
-          tickLength: 0,
-          gridLineWidth: 1,
-          gridLineColor: "#000000",
-          tickPixelInterval: 120
+            },
+            lineWidth: 0,
+            gridLineDashStyle: "dot",
+            tickWidth: 1,
+            tickLength: 0,
+            gridLineWidth: 1,
+            gridLineColor: "#000000",
+            tickPixelInterval: 120
+          }
         }
-      }
-    });
-  };
+      });
+    };
+
+    window[`TRMNL_ADAFRUIT_IO_CREATE_${chartId}`] = createChart;
+  })();
 </script>

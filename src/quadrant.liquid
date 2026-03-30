@@ -9,10 +9,14 @@
 </div>
 
 <script>
-  // ensure your chart loads before plugin render is generated
-  if ("Chartkick" in window) {
-    createChart();
-  } else {
-    window.addEventListener("chartkick:load", createChart, true);
-  }
+  (() => {
+    const initChart = window[`TRMNL_ADAFRUIT_IO_CREATE_{{ chart_id }}`];
+
+    // ensure your chart loads before plugin render is generated
+    if (typeof initChart === "function" && "Chartkick" in window) {
+      initChart();
+    } else if (typeof initChart === "function") {
+      window.addEventListener("chartkick:load", initChart, { once: true });
+    }
+  })();
 </script>
