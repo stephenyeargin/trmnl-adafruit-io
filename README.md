@@ -1,6 +1,6 @@
 # Adafruit IO for TRMNL
 
-[![Build and Deploy](https://github.com/stephenyeargin/trmnl-adafruit-io/actions/workflows/build.yml/badge.svg)](https://github.com/stephenyeargin/trmnl-adafruit-io/actions/workflows/build.yml)
+[![Build and Deploy](https://github.com/stephenyeargin/trmnl-adafruit-io/actions/workflows/build.yml/badge.svg)](https://github.com/stephenyeargin/trmnl-adafruit-io/actions/workflows/build.yml) [![TRMNL Recipe Connections](https://trmnl-badges.gohk.xyz/badge/connections?recipe=112643)](https://trmnl.com/recipes/112643)
 
 ![promo](assets/promo.png)
 
