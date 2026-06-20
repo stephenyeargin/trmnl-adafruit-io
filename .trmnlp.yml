@@ -12,8 +12,8 @@ custom_fields: {
   adafruit_api_key: "{{ env.IO_KEY }}",
   adafruit_feed_id: "demo-iot-data",
   adafruit_lookback: 24,
-  # adafruit_resolution: 1,
-  # adafruit_aggregate: val
+  adafruit_resolution: 5,
+  adafruit_aggregate: val
 }
 
 # override variables
@@ -23,7 +23,7 @@ variables:
       instance_name: 'Adafruit IO'
     },
     user: {
-      locale: "en",
+      locale: "en-US",
       time_zone: Central Time (US & Canada),
       time_zone_iana: America/Chicago,
       utc_offset: -18000

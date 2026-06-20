@@ -5,8 +5,10 @@ dark_mode: 'no'
 static_data: ''
 polling_verb: get
 framework_version: latest
-serverless_language: ''
-polling_url: "https://io.adafruit.com/api/v2/{{ adafruit_username }}/feeds/{{ adafruit_feed_id }}\r\nhttps://io.adafruit.com/api/v2/{{ adafruit_username }}/feeds/{{ adafruit_feed_id }}/data/chart?hours={{ adafruit_lookback | default: 1 }}&field={{ adafruit_aggregate }}&resolution={{ adafruit_resolution }}\r\n"
+serverless_language: node
+polling_url: |
+  https://io.adafruit.com/api/v2/{{ adafruit_username }}/feeds/{{ adafruit_feed_id }}
+  https://io.adafruit.com/api/v2/{{ adafruit_username }}/feeds/{{ adafruit_feed_id }}/data/chart?hours={{ adafruit_lookback | default: 1 }}&field={{ adafruit_aggregate }}&resolution={{ adafruit_resolution }}
 polling_headers: X-AIO-Key={{ adafruit_api_key }}
 polling_body: ''
 id: 112643
